@@ -19,7 +19,7 @@ from glob import glob
 from tqdm import tqdm
 
 # -----------------------------
-# 參數設定
+# Parameter settings
 # -----------------------------
 parser = argparse.ArgumentParser(description='ViTPose 2D 推論')
 parser.add_argument('--config', type=str, required=True, help='ViTPose config 檔案')
@@ -31,7 +31,7 @@ parser.add_argument('--vis-out', type=str, default='output/vis', help='可視化
 args = parser.parse_args()
 
 # -----------------------------
-# 初始化模型
+# Initialize the model
 # -----------------------------
 pose_model = init_pose_model(
     config=args.config,
@@ -44,21 +44,21 @@ if dataset_info is not None:
     dataset_info = DatasetInfo(dataset_info)
 
 # -----------------------------
-# 建立輸出資料夾
+# Create output folder
 # -----------------------------
 os.makedirs(args.output, exist_ok=True)
 if args.vis:
     os.makedirs(args.vis_out, exist_ok=True)
 
 # -----------------------------
-# 讀取所有影格
+# Read all frames
 # -----------------------------
 img_list = sorted(glob(os.path.join(args.input, '*.[jp][pn]g')))  # jpg/png
 if len(img_list) == 0:
     raise ValueError(f"No images found in {args.input}")
 
 # -----------------------------
-# 推論每張影格
+# Infer each frame
 # -----------------------------
 for img_path in tqdm(img_list, desc='Inference'):
     img_name = os.path.basename(img_path)
@@ -80,14 +80,14 @@ for img_path in tqdm(img_list, desc='Inference'):
     )
 
     # -----------------------------
-    # 存 JSON
+    # Save JSON
     # -----------------------------
     out_file = os.path.join(args.output, os.path.splitext(img_name)[0] + '.json')
     with open(out_file, 'w') as f:
         json.dump(pose_results, f, indent=4)
 
     # -----------------------------
-    # 可視化
+    # Visualization
     # -----------------------------
     if args.vis:
         vis_img = vis_pose_result(
