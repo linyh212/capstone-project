@@ -13,7 +13,7 @@
 set -e  # 出現錯誤就停止
 
 # ---------------------------
-# Step 0: 建立必要資料夾
+# Step 0: Create base folders
 # ---------------------------
 mkdir -p frames
 mkdir -p dataset/images
