@@ -25,23 +25,28 @@ This workflow supports **coaches, athletes, and researchers** in analyzing paddl
 ## Model Development
 
 ### 1. Human Detection
+- **Purpose:** Identify human regions (bounding boxes) in each frame.  
+- **Tool:** ViTPose top-down pipeline uses a **pretrained detector** (e.g., Faster R-CNN) to locate humans.  
+- **Note:** Bounding boxes are used to crop input for 2D pose estimation.
 
 ### 2. 2D Human Pose Estimation
-- **ViTPose** is used for **top-down 2D pose estimation**.
-- Only **12 keypoints below the head** are labeled:
+- **Purpose:** Detect body keypoints to form a skeleton.  
+- **Tool:** **ViTPose** (inside **MMpose** framework) performs **top-down 2D pose estimation**.
+- **Keypoints:** 12 joints below the head:
   - Left/Right Shoulder, Elbow, Wrist
   - Left/Right Hip, Knee, Ankle
-- Pipeline includes:
-  1. Extract frames from input videos
-  2. Prepare dataset in COCO format
-  3. Train ViTPose on custom 12-joint dataset
-  4. Inference on all frames
-  5. Visualize keypoints
-  6. Assemble frames into final video
+- **Pipeline:**
+  1. Extract frames from input videos.
+  2. Gather frames into `dataset/images/` with **unique sequential filenames**.
+  3. Train ViTPose on **custom 12-joint COCO-style dataset**.
+  4. Run inference on all frames → output JSON keypoints.
+  5. Visualize keypoints using `draw_keypoints.py`.
+  6. Assemble frames into final video using ffmpeg.
 
 ### 3. 3D Human Pose Reconstruction
-- Future step: Convert 2D keypoints to **3D skeleton** using methods like **VideoPose3D**.
-- Enables measurement of stroke angles, joint trajectories, and velocities.
+- **Purpose:** Convert 2D keypoints to **3D skeleton**.
+- **Tool:** Methods like **VideoPose3D** can estimate 3D joint positions.
+- **Output:** Enables calculation of stroke angles, joint trajectories, velocities, etc.
 
 ---
 
