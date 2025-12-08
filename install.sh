@@ -1,19 +1,17 @@
 #!/usr/bin/env bash
 
-# ===========================
-# ViTPose 2D pipeline (Bash shell)
-# 1. 影片拆影格
-# 2. 聚集影格到 dataset/images
-# 3. 訓練 ViTPose
-# 4. 推論
-# 5. 畫骨架 keypoints
-# 6. 合成最終影片
-# ===========================
+# ViTPose 2D Pipeline (Bash Shell)
+# 1. Extract frames from videos
+# 2. Collect frames into dataset/images
+# 3. Train ViTPose
+# 4. Run inference
+# 5. Draw skeleton keypoints
+# 6. Generate final output video
 
-set -e  # 出現錯誤就停止
+set -e  # Stop the script if any command fails
 
 # ---------------------------
-# Step 0: Create base folders
+# 0) Create required directories
 # ---------------------------
 mkdir -p frames
 mkdir -p dataset/images
@@ -22,9 +20,9 @@ mkdir -p output/keypoints_json
 mkdir -p output/vis
 
 # ---------------------------
-# Step 1: extract frames
+# 1) Extract frames
 # ---------------------------
-echo "=== Step 1: extract frames ==="
+echo "=== Step 1: Extracting frames ==="
 for f in videos/*.{mp4,MP4}; do
     if [ -f "$f" ]; then
         name=$(basename "$f" .mp4)
@@ -35,18 +33,18 @@ for f in videos/*.{mp4,MP4}; do
 done
 
 # ---------------------------
-# Step 2: gather frames into dataset/images + reorder filenames
+# 2) Gather frames into dataset/images and rename
 # ---------------------------
-echo "=== Step 2: gather frames into dataset/images and rename ==="
+echo "=== Step 2: Gathering and renaming frames ==="
 
-# 清空 dataset/images 以防舊檔干擾
+# Clear existing images to avoid conflicts
 rm -f dataset/images/*.jpg
 
 counter=1
 for d in frames/*; do
     if [ -d "$d" ]; then
         for img in "$d"/*.jpg; do
-            # 新檔名 frame_000001.jpg, frame_000002.jpg ...
+            # Rename to frame_000001.jpg, frame_000002.jpg, ...
             printf -v newname "frame_%06d.jpg" "$counter"
             cp "$img" "dataset/images/$newname"
             ((counter++))
@@ -57,15 +55,15 @@ done
 echo "Total frames copied and renamed: $((counter-1))"
 
 # ---------------------------
-# Step 3: training ViTPose
+# 3) Train ViTPose
 # ---------------------------
-echo "=== Step 3: training ViTPose ==="
+echo "=== Step 3: Training ViTPose ==="
 mim train mmpose configs/vitpose_custom.py --work-dir work_dirs/vitpose_run1
 
 # ---------------------------
-# Step 4: inference
+# 4) Inference
 # ---------------------------
-echo "=== Step 4: inference ==="
+echo "=== Step 4: Running inference ==="
 python scripts/infer.py \
     --config configs/vitpose_custom.py \
     --checkpoint work_dirs/vitpose_run1/latest.pth \
@@ -73,18 +71,19 @@ python scripts/infer.py \
     --output output/keypoints_json
 
 # ---------------------------
-# Step 5: draw keypoints
+# 5) Draw keypoints
 # ---------------------------
-echo "=== Step 5: draw keypoints ==="
+echo "=== Step 5: Drawing keypoints ==="
 python scripts/draw_keypoints.py \
     --input-json output/keypoints_json \
     --images dataset/images \
     --output output/vis
 
 # ---------------------------
-# Step 6: make final video
+# 6) Generate final video
 # ---------------------------
-echo "=== Step 6: make final video ==="
-ffmpeg -framerate 30 -pattern_type glob -i "output/vis/*.jpg" -c:v libx264 -pix_fmt yuv420p output/final.mp4
+echo "=== Step 6: Generating final video ==="
+ffmpeg -framerate 30 -pattern_type glob -i "output/vis/*.jpg" \
+    -c:v libx264 -pix_fmt yuv420p output/final.mp4
 
-echo "=== Pipeline finished! ==="
+echo "=== Pipeline completed successfully! ==="

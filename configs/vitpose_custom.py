@@ -1,19 +1,19 @@
 # vitpose_custom.py
-# 目的：在你的專案中訓練「只含身體（肩膀以下）12 個 keypoints」的 ViTPose 2D 模型
-# 資料位置（你指定的專案結構）：
+# Purpose: Train a ViTPose 2D model using "12 lower-body keypoints" (shoulder and below)
+# Dataset structure you specified:
 #   dataset/annotations/train.json
-#   dataset/annotations/val.json   (與 train.json 相同)
-#   dataset/images/              (所有影格影像)
+#   dataset/annotations/val.json   (same format as train)
+#   dataset/images/                (all extracted frames)
 
 _base_ = [
     'mmpose/configs/_base_/default_runtime.py',
     'mmpose/configs/_base_/datasets/coco.py',
-    # ViTPose 的常用基底 config（COCO / topdown heatmap）
+    # Base config for ViTPose (COCO / top-down heatmap)
     'mmpose/configs/body_2d_keypoint/topdown_heatmap/coco/td-hm_ViTPose-base_8xb64-210e_coco-256x192.py',
 ]
 
 # -----------------------------
-# 1) dataset (指向你的 dataset/annotations + dataset/images)
+# 1) Dataset (pointing to dataset/annotations and dataset/images)
 # -----------------------------
 train_dataloader = dict(
     dataset=dict(
@@ -29,16 +29,20 @@ val_dataloader = dict(
     )
 )
 
-# （可選）如果你之後要用 test 運行，也可以同步指向同一套資料
+# (Optional) If you want to run test using the same dataset
 test_dataloader = val_dataloader
 
 # -----------------------------
-# 2) keypoints 定義（只保留肩膀以下 12 點）
-#    你的人為標註 JSON 必須用同一順序與數量（12 points）
+# 2) Keypoint definition (12 keypoints below the head)
+#    IMPORTANT: Your annotation JSON must use the same order + count (12 pts)
 # -----------------------------
-# 12 points 順序（固定）：
-# 1 LShoulder, 2 RShoulder, 3 LElbow, 4 RElbow, 5 LWrist, 6 RWrist,
-# 7 LHip,      8 RHip,      9 LKnee, 10 RKnee, 11 LAnkle, 12 RAnkle
+# Keypoint order (fixed):
+#  1 LShoulder,  2 RShoulder,
+#  3 LElbow,     4 RElbow,
+#  5 LWrist,     6 RWrist,
+#  7 LHip,       8 RHip,
+#  9 LKnee,     10 RKnee,
+# 11 LAnkle,    12 RAnkle
 keypoint_names = [
     'left_shoulder', 'right_shoulder',
     'left_elbow', 'right_elbow',
@@ -48,19 +52,19 @@ keypoint_names = [
     'left_ankle', 'right_ankle',
 ]
 
-# skeleton 可用於可視化/評估（不是訓練必須，但建議補齊）
+# Skeleton (useful for visualization/evaluation; not required for training)
 skeleton = [
-    [1, 3], [3, 5],          # L arm
-    [2, 4], [4, 6],          # R arm
-    [1, 7], [2, 8],          # torso (shoulder -> hip)
-    [7, 9], [9, 11],         # L leg
-    [8, 10], [10, 12],       # R leg
+    [1, 3], [3, 5],          # Left arm
+    [2, 4], [4, 6],          # Right arm
+    [1, 7], [2, 8],          # Torso (shoulder -> hip)
+    [7, 9], [9, 11],         # Left leg
+    [8, 10], [10, 12],       # Right leg
 ]
 
 # -----------------------------
-# 3) 覆寫模型輸出維度（非常關鍵：out_channels = 12）
+# 3) Overwrite model output dimension (CRITICAL: out_channels = 12)
 # -----------------------------
-# 這會把 ViTPose 的 keypoint head 改成輸出 12 個 heatmap（對應 12 個關節）
+# This makes ViTPose predict 12 heatmaps instead of COCO’s 17
 model = dict(
     keypoint_head=dict(
         out_channels=12
@@ -68,21 +72,21 @@ model = dict(
 )
 
 # -----------------------------
-# 4) 覆寫資料配置（把 num_keypoints 改成 12）
-#    注意：不同版本的 base config 可能把 data_cfg 放在不同位置；
-#    如果你訓練時看到 "num_keypoints" 仍是 17，代表你的安裝版本把它放在別的 key，
-#    那麼你只要把下面這段（data_cfg）保留，並確保它在 config 最後被覆蓋到。
+# 4) Overwrite dataset configuration (num_keypoints = 12)
+#    NOTE: In some mmpose versions, data_cfg lives in different locations.
+#    If you still see "num_keypoints = 17" during training,
+#    keep this section and ensure it overrides the base config.
 # -----------------------------
 data_cfg = dict(
     num_keypoints=12
 )
 
 # -----------------------------
-# 5)（可選）訓練超參數微調（你可先用預設，後面再調）
+# 5) (Optional) Training hyperparameters
 # -----------------------------
 train_cfg = dict(
     max_epochs=210
 )
 
-# 如果你的資料量不大，建議先把 batch size 準到你的 GPU 能吃：
+# If your dataset is small, reduce batch size depending on GPU memory
 train_dataloader.update(dict(batch_size=16))

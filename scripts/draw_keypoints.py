@@ -68,7 +68,7 @@ for json_path in tqdm(json_files, desc='Drawing keypoints'):
     img_path_jpg = os.path.join(args.images, base_name + '.jpg')
     img_path_png = os.path.join(args.images, base_name + '.png')
     
-    # 找影像
+    # load image
     if os.path.exists(img_path_jpg):
         img_path = img_path_jpg
     elif os.path.exists(img_path_png):
@@ -83,7 +83,7 @@ for json_path in tqdm(json_files, desc='Drawing keypoints'):
     with open(json_path, 'r') as f:
         data = json.load(f)
     
-    # Top-Down 只會有一個人
+    # draw keypoints and skeleton
     for person in data:
         keypoints = person['keypoints']  # [x1, y1, score1, x2, y2, score2, ...]
         num_kpts = len(keypoints) // 3
