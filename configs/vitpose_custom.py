@@ -6,29 +6,31 @@
 #   dataset/images/                (all extracted frames)
 
 _base_ = [
-    'mmpose/configs/_base_/default_runtime.py',
-    'mmpose/configs/_base_/datasets/coco.py',
     # Base config for ViTPose (COCO / top-down heatmap)
-    'mmpose/configs/body_2d_keypoint/topdown_heatmap/coco/td-hm_ViTPose-base_8xb64-210e_coco-256x192.py',
+    '../mmpose/configs/body_2d_keypoint/topdown_heatmap/coco/td-hm_ViTPose-base_8xb64-210e_coco-256x192.py',
 ]
+
+custom_imports = dict(imports=['mmpretrain'], allow_failed_imports=False)
 
 # -----------------------------
 # 1) Dataset (pointing to dataset/annotations and dataset/images)
 # -----------------------------
+# In mmpose, data_root is the parent directory of both annotations and images.
+# data_prefix specifies the subdirectory for images.
 train_dataloader = dict(
     dataset=dict(
-        ann_file='dataset/annotations/train.json',
-        data_root='dataset/images/'
+        data_root='dataset/',
+        ann_file='annotations/train.json',
+        data_prefix=dict(img='images/'),
     )
 )
-
 val_dataloader = dict(
     dataset=dict(
-        ann_file='dataset/annotations/val.json',
-        data_root='dataset/images/'
+        data_root='dataset/',
+        ann_file='annotations/val.json',
+        data_prefix=dict(img='images/'),
     )
 )
-
 test_dataloader = val_dataloader
 
 # -----------------------------
@@ -65,7 +67,7 @@ skeleton = [
 # -----------------------------
 # This makes ViTPose predict 12 heatmaps instead of COCO’s 17
 model = dict(
-    keypoint_head=dict(
+    head=dict(
         out_channels=12
     )
 )
