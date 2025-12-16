@@ -24,6 +24,10 @@ venv/
 # Dataset and outputs
 
 dataset/
+frames/
+work_dirs/
+outputs/
+mmpose/
 val/
 *.mp4
 *.avi
@@ -32,7 +36,6 @@ val/
 **.jpg
 **.png
 **.txt
-outputs/
 
 # IDE and OS files
 
