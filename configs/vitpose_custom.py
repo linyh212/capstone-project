@@ -29,7 +29,6 @@ val_dataloader = dict(
     )
 )
 
-# (Optional) If you want to run test using the same dataset
 test_dataloader = val_dataloader
 
 # -----------------------------
